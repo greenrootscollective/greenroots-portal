@@ -167,7 +167,7 @@ create table if not exists public.announcements (
 -- ---------------------------------------------------------------------
 create or replace function public.is_admin()
 returns boolean language sql stable security definer set search_path = public as $$
-  select exists (select 1 from profiles where id = auth.uid() and role = 'admin');
+  select exists (select 1 from profiles where id = auth.uid() and role = 'admin' and status = 'member');
 $$;
 create or replace function public.is_member()
 returns boolean language sql stable security definer set search_path = public as $$
@@ -289,7 +289,9 @@ begin
   if not (select survey_open from app_settings where id = 1) then raise exception 'The survey is closed.'; end if;
   delete from ratings where rater_id = auth.uid();
   for r in select key::uuid as ratee, value::int as score from jsonb_each_text(p_ratings) loop
-    if r.ratee <> auth.uid() and r.score between 1 and 5 then
+    -- only other active student members can be rated (never admins, never yourself)
+    if r.ratee <> auth.uid() and r.score between 1 and 5
+       and exists (select 1 from profiles where id = r.ratee and role = 'student' and status = 'member') then
       insert into ratings (rater_id, ratee_id, score) values (auth.uid(), r.ratee, r.score);
     end if;
   end loop;
@@ -416,7 +418,9 @@ create policy "reflections read"   on public.reflections for select using (user_
 create policy "reflections insert" on public.reflections for insert with check (
   user_id = auth.uid() and exists (select 1 from attendance a where a.session_id = reflections.session_id
                                    and a.user_id = auth.uid() and a.status in ('present','late')));
-create policy "reflections update" on public.reflections for update using (user_id = auth.uid());
+create policy "reflections update" on public.reflections for update using (user_id = auth.uid()) with check (
+  user_id = auth.uid() and exists (select 1 from attendance a where a.session_id = reflections.session_id
+                                   and a.user_id = auth.uid() and a.status in ('present','late')));
 
 create policy "ann read"  on public.announcements for select using (public.is_member() or public.is_admin());
 create policy "ann write" on public.announcements for all using (public.is_admin()) with check (public.is_admin());
