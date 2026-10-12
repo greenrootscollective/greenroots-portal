@@ -9,6 +9,8 @@ Until step 2 is done, the site runs in **demo mode**: it's fully clickable with 
 3. **Authentication → URL Configuration:** set **Site URL** to where the site will live (e.g. `https://recycling.greenroots.tech` or your GitHub Pages / Vercel link).
 4. **Authentication → Providers → Email:** keep "Confirm email" **on**, so students must confirm their school email.
 
+> **Optional check before you start:** `supabase/tests/run.sh` runs 80 privacy and security checks against a throwaway local Postgres (needs PostgreSQL installed). They should all say PASS.
+
 ## 2. Connect the website
 
 Supabase → **Project Settings → API**. Copy the **Project URL** and the **anon public** key into `assets/js/config.js`:

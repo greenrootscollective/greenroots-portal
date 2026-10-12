@@ -219,7 +219,7 @@ export async function survey(page) {
   const nm = (id) => short(byId[id]);
   page.innerHTML = `
     <a class="back" href="#/admin/activities">${ICON.chevL} Activities</a>
-    ${head("Survey results", `${answered.size} of ${students.length} answered · ${ratings.length} ratings`, `<button class="btn btn-ghost sm danger-text" id="reset-s">${ICON.trash} Reset all answers</button>`)}
+    ${head("Survey results", `${answered.size} of ${students.length} answered · ${ratings.length} ratings`, `<button class="btn btn-primary sm" id="exp-r">${ICON.download} Export ratings (CSV)</button><button class="btn btn-ghost sm" id="exp-p">${ICON.download} Export per-person summary</button><button class="btn btn-ghost sm danger-text" id="reset-s">${ICON.trash} Reset all answers</button>`)}
     <div class="privacy">${ICON.shield}<div><b>Admin eyes only.</b> Students were told their answers are private. Please don't share screenshots of this page.</div></div>
     <div class="grid-2">
       <article class="card"><header class="card-h"><h2>${ICON.heart} Strong mutual pairs <span class="count">${mutual.length}</span></h2></header>
@@ -240,6 +240,28 @@ export async function survey(page) {
     <h2 class="sec-title">Availability &amp; notes</h2>
     <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Best days</th><th>Private note</th><th>Sent</th></tr></thead>
       <tbody>${subs.filter(s => byId[s.user_id]).map(s => `<tr><td><b>${esc(byId[s.user_id].full_name)}</b></td><td>${(s.days || []).map(d => `<span class="pill pill-up">${esc(d)}</span>`).join(" ") || "—"}</td><td>${esc(s.note || "") || "—"}</td><td class="nowrap">${fmtDate(s.submitted_at.slice(0, 10), { day: "numeric", month: "short" })}</td></tr>`).join("")}</tbody></table></div>`;
+  // §7.4: one row per rating, and one row per student; both open in Excel / Google Sheets (UTF-8 with BOM)
+  const full = (id) => byId[id]?.full_name || "(left the initiative)";
+  $("#exp-r").addEventListener("click", () => {
+    const rows = ratings.filter(r => byId[r.rater_id] || byId[r.ratee_id])
+      .sort((x, y) => full(x.rater_id).localeCompare(full(y.rater_id)) || full(x.ratee_id).localeCompare(full(y.ratee_id)))
+      .map(r => [byId[r.rater_id]?.grc_id, full(r.rater_id), byId[r.rater_id]?.class, byId[r.ratee_id]?.grc_id, full(r.ratee_id), r.score, RATING[r.score]]);
+    download(`GRC-survey-ratings-${todayISO()}.csv`, csv([["Rater GRC ID", "Rater", "Rater class", "Rated GRC ID", "Rated person", "Score (1-5)", "Meaning"], ...rows]));
+  });
+  $("#exp-p").addEventListener("click", () => {
+    const subOf = Object.fromEntries(subs.map(x => [x.user_id, x]));
+    const names = (list) => list.map(full).join("; ");
+    const rows = [...students].sort((x, y) => x.full_name.localeCompare(y.full_name)).map(st => {
+      const mine = R[st.id] || {}, rated = Object.keys(mine).filter(id => byId[id]);
+      const want = rated.filter(id => mine[id] >= 4), not = rated.filter(id => mine[id] === 1);
+      const mutualPicks = want.filter(id => R[id]?.[st.id] >= 4);
+      const sub = subOf[st.id];
+      return [st.grc_id, st.full_name, st.class, st.group_id ? `Group ${st.group_id}` : "", sub ? "yes" : "no", sub ? sub.submitted_at.slice(0, 10) : "",
+        rated.length, names(want), names(not), names(mutualPicks), (sub?.days || []).join(" "), sub?.note || ""];
+    });
+    download(`GRC-survey-per-person-${todayISO()}.csv`, csv([["GRC ID", "Name", "Class", "Current group", "Answered", "Sent on", "People rated",
+      "Wants to be with (4-5)", "Rather not (1)", "Mutual picks", "Best days", "Private note"], ...rows]));
+  });
   $("#reset-s").addEventListener("click", () => {
     if (!confirm("Delete ALL survey answers from everyone? Use this only for a new term.")) return;
     busy(null, async () => { await api.resetSurvey(); toast("Survey answers cleared"); survey(page); });

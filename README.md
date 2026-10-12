@@ -19,6 +19,10 @@ Open `index.html` through any static server (e.g. `python3 -m http.server`) , go
 
 See **[docs/SETUP.md](docs/SETUP.md)**. It takes about 20 minutes: create a free Supabase project, run `supabase/schema.sql`, paste two keys into `assets/js/config.js`, and deploy.
 
+## Tested
+
+`supabase/tests/run.sh` checks every privacy rule in the database (80 checks). **[docs/QA.md](docs/QA.md)** reports each DONE WHEN box from the Director's Plan (`docs/Directors-Plan.pdf`).
+
 ## How it's planned
 
 See **[docs/PLAN.md](docs/PLAN.md)** for the user journeys, the grouping formula, privacy rules and the roadmap.

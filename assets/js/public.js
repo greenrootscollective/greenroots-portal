@@ -50,23 +50,25 @@ export async function viewLanding() {
     </div>
   </div>
 
-  <section class="lhero">
+  <section class="lhero" id="lhero">
+    ${leaves([58, 66, 74, 81, 88, 94, 3, 97])}
     <div class="lhero-inner">
       <div class="lhero-copy">
-        <div class="lhero-mark reveal">${badgeLogo("xl")}</div>
-        <h1 class="lhero-name reveal">GREENROOTS</h1>
-        <p class="lhero-coll reveal">· COLLECTIVE ·</p>
-        <p class="lhero-slogan reveal">“planting seeds, growing change”</p>
-        <div class="lhero-rule reveal"></div>
-        <p class="eyebrow reveal">${esc(CONFIG.PROGRAMME)} · ${esc(CONFIG.YEAR)}</p>
-        <h2 class="lhero-title reveal">Small groups. <em>Real impact.</em></h2>
-        <p class="lhero-lede reveal">The student-led recycling initiative at Agora Madrid. Join a small group of friends, recycle around school once a month, and earn meaningful CAS Action &amp; Service hours, all tracked in one place.</p>
-        <div class="lhero-ctas reveal"><a class="btn btn-sand lg" href="#/signup">Join the initiative ${ICON.arrow}</a><a class="btn btn-line lg" href="#initiative" data-scroll>How it works</a></div>
+        <div class="lhero-mark">${badgeLogo("xl")}</div>
+        <h1 class="lhero-name" aria-label="GREENROOTS">${[..."GREENROOTS"].map((c, k) => `<span aria-hidden="true" style="--t:${500 + k * 40}ms">${c}</span>`).join("")}</h1>
+        ${[`<p class="lhero-coll">· COLLECTIVE ·</p>`,
+           `<p class="lhero-slogan">“planting seeds, growing change”</p>`,
+           `<div class="lhero-rule"></div>`,
+           `<p class="eyebrow">${esc(CONFIG.PROGRAMME)} · ${esc(CONFIG.YEAR)}</p>`,
+           `<h2 class="lhero-title">Small groups. <em>Real impact.</em></h2>`,
+           `<p class="lhero-lede">The student-led recycling initiative at Agora Madrid. Join a small group of friends, recycle around school once a month, and earn meaningful CAS Action &amp; Service hours, all tracked in one place.</p>`,
+           `<div class="lhero-ctas"><a class="btn btn-sand lg" href="#/signup">Join the initiative ${ICON.arrow}</a><a class="btn btn-line lg" href="#initiative" data-scroll>How it works</a></div>`,
+          ].map((h, k) => h.replace(/^<(\w+) class="/, `<$1 style="--t:${900 + k * 70}ms" class="hf `)).join("\n        ")}
       </div>
       <div class="lhero-float" aria-hidden="true">
-        <div class="fcard f1"><span class="fcard-ic">${ICON.scale}</span><div><b data-count="${stats.kg}" data-dec="1">0</b><small>kg recycled this year</small></div></div>
-        <div class="fcard f2"><span class="fcard-ic">${ICON.users}</span><div><b data-count="${stats.members}">0</b><small>students taking part</small></div></div>
-        <div class="fcard f3"><span class="fcard-ic">${ICON.calCheck}</span><div><b data-count="${stats.sessions}">0</b><small>sessions completed</small></div></div>
+        <div class="fcard f1"><span class="fcard-ic">${ICON.scale}</span><div><b data-count="${stats.kg}" data-dec="1" data-delay="1200">0</b><small>kg recycled this year</small></div></div>
+        <div class="fcard f2"><span class="fcard-ic">${ICON.users}</span><div><b data-count="${stats.members}" data-delay="1300">0</b><small>students taking part</small></div></div>
+        <div class="fcard f3"><span class="fcard-ic">${ICON.calCheck}</span><div><b data-count="${stats.sessions}" data-delay="1400">0</b><small>sessions completed</small></div></div>
       </div>
     </div>
     <a class="scroll-cue" href="#about" data-scroll aria-label="Scroll down"><span></span></a>
@@ -162,6 +164,7 @@ export async function viewLanding() {
   </section>
 
   <section class="lcta">
+    ${leaves([4, 9, 15, 21, 79, 85, 91, 96])}
     <div class="lwrap lcta-inner reveal">
       ${badgeLogo("lg")}
       <h2>Ready to dig in?</h2>
@@ -174,6 +177,19 @@ export async function viewLanding() {
 
   bindDemo();
   bindLanding();
+  const hero = $("#lhero");
+  const play = () => hero.classList.add("play");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) play();
+  else Promise.race([document.fonts?.ready, new Promise(r => setTimeout(r, 700))]).then(() => requestAnimationFrame(play));
+}
+
+// Leaf drift: a few blurred leaf silhouettes falling behind the content, at the given left positions (%).
+const LEAF = `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>`;
+function leaves(xs) {
+  return `<div class="leaves" aria-hidden="true">${xs.map((x, k) => {
+    const r = (n) => ((k * 37 + n * 53) % 100) / 100; // fixed pseudo-random, same on every visit
+    return `<i style="--x:${x}%;--s:${16 + Math.round(r(1) * 22)}px;--o:${(0.04 + r(2) * 0.04).toFixed(3)};--b:${(1.2 + r(3) * 2).toFixed(1)}px;--dur:${18 + Math.round(r(4) * 14)}s;--delay:-${Math.round(r(5) * 30)}s">${LEAF}</i>`;
+  }).join("")}</div>`;
 }
 
 export function footer() {
@@ -224,6 +240,7 @@ export function revealOnScroll(root = document) {
     el.classList.add("in");
     if (el.dataset.count != null && !el.dataset.done) {
       el.dataset.done = 1;
+      if (el.dataset.delay) { const d = +el.dataset.delay; delete el.dataset.delay; el.dataset.done = ""; setTimeout(() => run(el), d); return; }
       const target = +el.dataset.count, dec = +(el.dataset.dec || 0), suf = el.dataset.suffix || "";
       const t0 = performance.now(), dur = 1300;
       const tick = (t) => {

@@ -130,9 +130,10 @@ select 'survey', 'Group preference survey',
        'Tell us who you would like to be in a group with. Private: only the GRC admin team sees answers.',
        current_date + 7
 where not exists (select 1 from public.tasks where type = 'survey');
-insert into public.tasks (type, title, body)
+insert into public.tasks (type, title, body, due_date)
 select 'acknowledge', 'Read & accept the participant agreement',
-       'I will attend my scheduled sessions on time, give at least 24 hours notice if I cannot come, respect the team and the admin chain (Operations → Management → Executive Director), and not share GRC materials, photos or files outside the initiative without permission.'
+       'I will attend my scheduled sessions on time, give at least 24 hours notice if I cannot come, respect the team and the admin chain (Operations → Management → Executive Director), and not share GRC materials, photos or files outside the initiative without permission.',
+       current_date + 7
 where not exists (select 1 from public.tasks where type = 'acknowledge');
 
 create table if not exists public.task_done (

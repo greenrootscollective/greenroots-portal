@@ -20,6 +20,23 @@ const SEEN_KEY = "grc-news-seen";
 const seenAt = () => { try { return localStorage.getItem(SEEN_KEY) || ""; } catch { return ""; } };
 const markSeen = () => { try { localStorage.setItem(SEEN_KEY, new Date().toISOString()); } catch { /* ignore */ } };
 
+// Badges earned since this browser last showed them get a small celebration (flip, light sweep, toast).
+const badgesKey = () => `grc-badges-seen-${state.profile.id}`;
+function freshBadges(badges) {
+  let seen = null;
+  try { seen = JSON.parse(localStorage.getItem(badgesKey()) || "null"); } catch { /* ignore */ }
+  // first visit on this browser: only a brand-new member (just the Seedling) is celebrated
+  if (!Array.isArray(seen)) return badges.size === 1 ? [...badges] : [];
+  return [...badges].filter(b => !seen.includes(b));
+}
+function celebrate(fresh, badges) {
+  try { localStorage.setItem(badgesKey(), JSON.stringify([...badges])); } catch { /* ignore */ }
+  if (!fresh.length) return;
+  const names = fresh.map(id => BADGES.find(b => b.id === id).name);
+  const msg = names.length === 1 ? `Badge earned: ${names[0]} 🏅` : `${names.length} new badges: ${names.join(", ")} 🏅`;
+  setTimeout(() => toast(msg), $(".toast") ? 3600 : 1400); // never cut off another toast, e.g. "You're in!"
+}
+
 // ---------------------------------------------------------------- data
 async function load() {
   const [sessions, attendance, tasks, taskDone, submission, reflections, absences, league, news, settings] = await Promise.all([
@@ -151,6 +168,7 @@ export async function viewHome(page) {
   const hour = new Date().getHours();
   const greet = hour < 12 ? "Good morning" : hour < 19 ? "Good afternoon" : "Good evening";
   const maxKg = Math.max(1, ...d.league.map(l => +l.kg));
+  const fresh = freshBadges(d.badges);
 
   page.innerHTML = `
     <section class="hbanner reveal">
@@ -201,7 +219,7 @@ export async function viewHome(page) {
 
       <article class="card badges-card reveal">
         <header class="card-h"><h2>${ICON.award} Badges</h2><a class="small-link" href="#/profile">See all ${ICON.chev}</a></header>
-        <div class="badge-row">${BADGES.map(b => `<span class="medal ${d.badges.has(b.id) ? "on" : ""}" title="${esc(b.name)}: ${esc(b.desc)}">${ICON[b.icon]}</span>`).join("")}</div>
+        <div class="badge-row">${BADGES.map(b => `<span class="medal ${d.badges.has(b.id) ? "on" : ""} ${fresh.includes(b.id) ? "fresh" : ""}" title="${esc(b.name)}: ${esc(b.desc)}">${ICON[b.icon]}</span>`).join("")}</div>
         <p class="fine">${d.badges.size} of ${BADGES.length} earned. Next: <b>${esc(BADGES.find(b => !d.badges.has(b.id))?.desc || "you've got them all! 🎉")}</b></p>
       </article>
 
@@ -219,6 +237,7 @@ export async function viewHome(page) {
       </article>
     </div>`;
   bindSessionActions(page, d.sessions, () => viewHome(page));
+  celebrate(fresh, d.badges);
 }
 
 // ================================================================ ACTIVITIES
@@ -505,6 +524,7 @@ export async function viewProfile(page) {
   const school = state.schools.find(s => s.id === p.school_id);
   const isAdmin = p.role === "admin";
   const d = isAdmin ? null : await load();
+  const fresh = isAdmin ? [] : freshBadges(d.badges);
   page.innerHTML = `
     ${pageHead("Account", "Profile", esc(p.email))}
     <div class="profile-grid">
@@ -523,7 +543,8 @@ export async function viewProfile(page) {
       </form>
     </div>
     ${isAdmin ? "" : `<h2 class="sec-title">Badges · ${d.badges.size}/${BADGES.length}</h2>
-      <div class="badge-grid">${BADGES.map(b => `<div class="bcard ${d.badges.has(b.id) ? "on" : ""} reveal"><span class="medal ${d.badges.has(b.id) ? "on" : ""}">${d.badges.has(b.id) ? ICON[b.icon] : ICON.lock}</span><b>${esc(b.name)}</b><small>${esc(b.desc)}</small></div>`).join("")}</div>`}`;
+      <div class="badge-grid">${BADGES.map(b => `<div class="bcard ${d.badges.has(b.id) ? "on" : ""} reveal"><span class="medal ${d.badges.has(b.id) ? "on" : ""} ${fresh.includes(b.id) ? "fresh" : ""}">${d.badges.has(b.id) ? ICON[b.icon] : ICON.lock}</span><b>${esc(b.name)}</b><small>${esc(b.desc)}</small></div>`).join("")}</div>`}`;
+  if (!isAdmin) celebrate(fresh, d.badges);
   $("#f-prof").addEventListener("submit", (e) => {
     e.preventDefault();
     busy(e.submitter, async () => { state.profile = await api.updateMyProfile(Object.fromEntries(new FormData(e.target))); toast("Profile saved"); viewProfile(page); });

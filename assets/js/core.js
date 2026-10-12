@@ -142,13 +142,13 @@ export function ring(pct, label, size = 120) {
   const r = 52, c = 2 * Math.PI * r, v = pct == null ? 0 : Math.max(0, Math.min(100, pct));
   return `<div class="ring" style="width:${size}px;height:${size}px">
     <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="${r}" class="ring-bg"/>
-    <circle cx="60" cy="60" r="${r}" class="ring-fg" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - v / 100)}"/></svg>
+    <circle cx="60" cy="60" r="${r}" class="ring-fg" style="--c:${c}" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - v / 100)}"/></svg>
     <div class="ring-txt"><b>${pct == null ? "—" : pct + "%"}</b><span>${esc(label)}</span></div></div>`;
 }
 
 // ---------------------------------------------------------------- brand bits
 export const treeImg = (variant = "green", cls = "") => `<img class="${cls}" src="assets/img/tree-${variant}.png" alt="" aria-hidden="true">`;
-export const badgeLogo = (cls = "") => `<span class="logo-badge ${cls}">${treeImg("green")}</span>`;
+export const badgeLogo = (cls = "") => `<span class="logo-badge ${cls}">${treeImg("green")}<i class="sheen" aria-hidden="true"></i></span>`;
 
 // ---------------------------------------------------------------- icons (Lucide, ISC licence)
 const i = (p) => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
