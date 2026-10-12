@@ -1,0 +1,4 @@
+# Not part of the public website: internal plan, QA notes, database schema and tests.
+docs/
+supabase/
+*.md

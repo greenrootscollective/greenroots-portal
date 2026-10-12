@@ -187,14 +187,18 @@ $$;
 create or replace function public.make_grc_id(name text, phone text)
 returns text language plpgsql immutable as $$
 declare
-  parts  text[] := regexp_split_to_array(trim(coalesce(name,'')), '\s+');
+  -- plain capital letters only, as in the Mainframe: "Álvaro" -> ALVARO, "Núñez" -> NUNEZ
+  plain  text   := regexp_replace(upper(translate(coalesce(name,''),
+                     'áàâäãåéèêëíìîïóòôöõúùûüñçÁÀÂÄÃÅÉÈÊËÍÌÎÏÓÒÔÖÕÚÙÛÜÑÇ',
+                     'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC')), '[^A-Z ]', '', 'g');
+  parts  text[] := regexp_split_to_array(trim(plain), '\s+');
   digits text   := regexp_replace(coalesce(phone,''), '\D', '', 'g');
   suffix text;
 begin
   if length(digits) >= 2 then suffix := right(digits, 2);
-  elsif array_length(parts,1) >= 2 then suffix := upper(left(parts[2], 2));
+  elsif array_length(parts,1) >= 2 then suffix := left(parts[2], 2);
   else suffix := 'XX'; end if;
-  return upper(left(parts[1], 3)) || '-' || suffix;
+  return left(parts[1], 3) || '-' || suffix;
 end $$;
 
 -- ---------------------------------------------------------------------

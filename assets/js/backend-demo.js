@@ -17,11 +17,14 @@ const plain = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const iso = (d) => d.toISOString().slice(0, 10);
 const addDays = (n) => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + n); return d; };
 
+// Plain capital letters only, as in the Mainframe: "Álvaro" → "ALVARO", "Núñez" → "NUNEZ".
+const letters = (w) => (w || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z]/g, "");
+
 export function makeGrcId(name, phone) {
-  const parts = (name || "").trim().split(/\s+/);
+  const parts = (name || "").trim().split(/\s+/).map(letters).filter(Boolean);
   const digits = (phone || "").replace(/\D/g, "");
-  const suffix = digits.length >= 2 ? digits.slice(-2) : parts[1] ? parts[1].slice(0, 2).toUpperCase() : "XX";
-  return (parts[0] || "").slice(0, 3).toUpperCase() + "-" + suffix;
+  const suffix = digits.length >= 2 ? digits.slice(-2) : parts[1] ? parts[1].slice(0, 2) : "XX";
+  return (parts[0] || "").slice(0, 3) + "-" + suffix;
 }
 
 function seed() {

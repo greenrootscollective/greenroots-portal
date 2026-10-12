@@ -1,15 +1,19 @@
 <p align="center"><img src="assets/img/icon.png" width="96" alt="Greenroots Collective"></p>
 
-<h1 align="center">GRC Recycling Initiative Portal</h1>
+<h1 align="center">Greenroots Portal</h1>
 <p align="center"><i>“planting seeds, growing change”</i><br>Greenroots Collective · Agora Madrid International School · CAS 2026–27</p>
 
 ---
 
-This is the website and portal for the CAS Recycling Initiative: a scrolling GRC mini-site plus a private portal for each student and a control room for admins. Students sign up with their school email, unlock their portal with a code, and take a **private survey** about who they'd like to work with. The admin team then builds **fair, balanced groups** with one click, schedules the weekly rotation, marks attendance, and exports everything to the GRC Mainframe.
+The Greenroots Portal is Greenroots Collective's website and participant portal: a scrolling GRC mini-site plus a private portal for each student and a control room for admins. Its first programme is the **CAS Recycling Initiative**; more GRC programmes (Garden Club, workshops) will plug into the same portal later. Students sign up with their school email, unlock their portal with a code, and take a **private survey** about who they'd like to work with. The admin team then builds **fair, balanced groups** with one click, schedules the weekly rotation, marks attendance, and exports everything to the GRC Mainframe.
 
 **Students get:** a home dashboard, **Activities** with due dates (group survey, agreement, forms, CAS reflections), a calendar with *add to phone* and *can't make it*, an **attendance tracker** (rate, hours, streak), their group and the group league, badges, announcements, the participant guide and a printable **CAS summary**.
 
 **Admins get:** an overview with alerts, members with **Mainframe CSV export**, activities with completion and WhatsApp nudges, confidential survey results, the **group builder**, sessions & impact logging (kg, bags, photos), an attendance grid with absence approvals, announcements, **schools** and settings.
+
+## Deploy on Vercel
+
+It's a plain static site: no build step. `vercel.json` tells Vercel to serve the repo root as-is (framework *Other*, no build command, output directory `.`). `.vercelignore` keeps `docs/` and `supabase/` off the public site.
 
 ## Try it now
 

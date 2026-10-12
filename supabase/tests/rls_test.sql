@@ -226,6 +226,10 @@ set role authenticated; set request.jwt.claim.sub = :ada;
 select t.ok(t.n('select * from app_secrets') = 0 and t.n('select * from ratings') = 0, 'paused admin loses admin access');
 reset role;
 
+-- ---------------------------------------------------------------- GRC IDs use plain letters
+select t.ok(make_grc_id('Álvaro Serrano', '619 12 34 37') = 'ALV-37', 'GRC ID drops accents (ALV-37, not ÁLV-37)');
+select t.ok(make_grc_id('Íñigo Núñez', null) = 'INI-NU', 'GRC ID without a phone uses plain surname letters (INI-NU)');
+
 -- ---------------------------------------------------------------- report
 \o
 \set QUIET off
